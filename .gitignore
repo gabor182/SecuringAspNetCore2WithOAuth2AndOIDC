@@ -2,8 +2,9 @@
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
-/Starter Files/ImageGallery/.vs/ImageGallery/v15
-/.vs/SecuringAspNetCore2WithOAuth2AndOIDC/v15
+/.vs
+/Starter Files/ImageGallery/.vs
+/Finished Sample/ImageGallery/.vs
 /Finished Sample/ImageGallery/src/ImageGallery.API/bin
 /Finished Sample/ImageGallery/src/ImageGallery.API/obj
 /Finished Sample/ImageGallery/src/ImageGallery.Client/bin
@@ -18,3 +19,5 @@
 /Starter Files/ImageGallery/src/ImageGallery.Client/obj
 /Starter Files/ImageGallery/src/ImageGallery.Model/bin
 /Starter Files/ImageGallery/src/ImageGallery.Model/obj
+/Starter Files/ImageGallery/src/Marvin.IDP/obj
+/Starter Files/ImageGallery/src/Marvin.IDP/bin
