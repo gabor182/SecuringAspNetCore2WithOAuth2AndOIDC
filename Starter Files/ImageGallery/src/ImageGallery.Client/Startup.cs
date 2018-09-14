@@ -1,10 +1,14 @@
-﻿using ImageGallery.Client.Services;
+﻿using IdentityModel;
+using ImageGallery.Client.Services;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace ImageGallery.Client
 {
@@ -15,6 +19,7 @@ namespace ImageGallery.Client
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
+            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
         }
  
         // This method gets called by the runtime. Use this method to add services to the container.
@@ -35,7 +40,10 @@ namespace ImageGallery.Client
                 options.DefaultScheme = "Cookies";
                 options.DefaultChallengeScheme = "oidc";
             })
-            .AddCookie("Cookies")
+            .AddCookie("Cookies", options =>
+            {
+                options.AccessDeniedPath = "/Authorization/AccessDenied"; // set redirection path when access is denied
+            })
             .AddOpenIdConnect("oidc", options =>
             {
                 options.SignInScheme = "Cookies";
@@ -46,9 +54,21 @@ namespace ImageGallery.Client
                 //options.SignedOutCallbackPath = new PathString("...");
                 options.Scope.Add("openid");
                 options.Scope.Add("profile");
+                options.Scope.Add("address");
+                options.Scope.Add("roles");
                 options.SaveTokens = true;
                 options.ClientSecret = "secret";
                 options.GetClaimsFromUserInfoEndpoint = true;
+                options.ClaimActions.Remove("amr"); // remove amr claim from the filtered claims so we can get it from the IDP
+                options.ClaimActions.DeleteClaim("idp"); // remove claim so we won't get it from the IDP with the id token
+                options.ClaimActions.DeleteClaim("sid"); // remove claim so we won't get it from the IDP with the id token
+                options.ClaimActions.MapUniqueJsonKey("role", "role"); // add role to Claims
+
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    NameClaimType = JwtClaimTypes.GivenName,
+                    RoleClaimType = JwtClaimTypes.Role
+                };
             });
         }
 
