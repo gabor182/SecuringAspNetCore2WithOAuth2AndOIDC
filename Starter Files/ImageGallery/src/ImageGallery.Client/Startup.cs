@@ -28,6 +28,19 @@ namespace ImageGallery.Client
             // Add framework services.
             services.AddMvc();
 
+            services.AddAuthorization(authorizationOptions =>
+            {
+                // create a policy
+                authorizationOptions.AddPolicy(
+                    "CanOrderFrame",
+                    policyBuilder =>
+                    {
+                        policyBuilder.RequireAuthenticatedUser();
+                        policyBuilder.RequireClaim("country", "be");
+                        policyBuilder.RequireClaim("subscriptionlevel", "PayingUser");
+                    });
+            });
+
             // register an IHttpContextAccessor so we can access the current
             // HttpContext in services by injecting it
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
@@ -57,6 +70,8 @@ namespace ImageGallery.Client
                 options.Scope.Add("address");
                 options.Scope.Add("roles");
                 options.Scope.Add("imagegalleryapi");
+                options.Scope.Add("subscriptionlevel");
+                options.Scope.Add("country");
                 options.SaveTokens = true;
                 options.ClientSecret = "secret";
                 options.GetClaimsFromUserInfoEndpoint = true;
@@ -64,6 +79,8 @@ namespace ImageGallery.Client
                 options.ClaimActions.DeleteClaim("idp"); // remove claim so we won't get it from the IDP with the id token
                 options.ClaimActions.DeleteClaim("sid"); // remove claim so we won't get it from the IDP with the id token
                 options.ClaimActions.MapUniqueJsonKey("role", "role"); // add role to Claims
+                options.ClaimActions.MapUniqueJsonKey("subscriptionlevel", "subscriptionlevel"); // add subscriptionlevel to Claims
+                options.ClaimActions.MapUniqueJsonKey("country", "country"); // add country to Claims
 
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
