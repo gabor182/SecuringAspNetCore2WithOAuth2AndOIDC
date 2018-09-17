@@ -209,6 +209,42 @@ namespace ImageGallery.Client.Controllers
 
         public async Task Logout()
         {
+            // get the metadata
+            var discoveryClient = new DiscoveryClient("https://localhost:44306/");
+            var metaDataResponse = await discoveryClient.GetAsync();
+
+            // create a TokenRevocationClient
+            var revocationClient = new TokenRevocationClient(
+                metaDataResponse.RevocationEndpoint,
+                "imagegalleryclient", 
+                "secret");
+
+            // get the access token to revoke
+            var accessToken = await HttpContext.GetTokenAsync(OpenIdConnectParameterNames.AccessToken);
+
+            if (!string.IsNullOrWhiteSpace(accessToken))
+            {
+                var revokeAccessResponse = await revocationClient.RevokeAccessTokenAsync(accessToken);
+
+                if (revokeAccessResponse.IsError)
+                {
+                    throw new Exception("Problem encountered while revoking the access token.", revokeAccessResponse.Exception);
+                }
+            }
+
+            // revoke the refresh token as well
+            var refreshToken = await HttpContext.GetTokenAsync(OpenIdConnectParameterNames.RefreshToken);
+
+            if (!string.IsNullOrWhiteSpace(refreshToken))
+            {
+                var revokeRefreshResponse = await revocationClient.RevokeRefreshTokenAsync(refreshToken);
+
+                if (revokeRefreshResponse.IsError)
+                {
+                    throw new Exception("Problem encountered while revoking the refresh token.", revokeRefreshResponse.Exception);
+                }
+            }
+
             // Clears the local cookie ("Cookies" must match name from scheme)
             await HttpContext.SignOutAsync("Cookies");
             await HttpContext.SignOutAsync("oidc");
